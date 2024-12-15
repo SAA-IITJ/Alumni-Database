@@ -3,12 +3,21 @@
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
+import { alumdata, columns } from "./columns"
+import { DataTable } from "./data-table"
 
-export default function ProtectedPage() {
+async function getData(): Promise<alumdata[]> {
+  // Fetch data from your API here.
+  return null;
+}
+
+export default  function ProtectedPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
 
   const [message, setMessage] = useState<string | null>(null);
+
+  
 
   // Redirect unauthenticated users
   useEffect(() => {
@@ -62,12 +71,17 @@ export default function ProtectedPage() {
     return <p>Loading...</p>;
   }
 
+  const data =  getData();
+
   return (
     <div style={{ textAlign: "center", marginTop: "50px" }}>
       <h1>Protected Page</h1>
       {session && <p>Welcome, {session.user?.name}!</p>}
 
       {message && <p>{message}</p>}
+      <div className="container mx-auto py-10">
+      <DataTable columns={columns} data={data} />
+    </div>
     </div>
   );
 }

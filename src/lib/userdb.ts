@@ -8,7 +8,7 @@ const options: MongoClientOptions = {};
 let client: MongoClient | null = null;
 let db: Db | null = null;
 
-export const getMongoClient = async (): Promise<Db> => {
+export const userdb = async (): Promise<Db> => {
   if (!uri) {
     throw new Error("Please add your MongoDB URI to .env.local");
   }

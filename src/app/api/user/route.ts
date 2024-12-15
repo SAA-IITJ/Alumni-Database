@@ -1,11 +1,11 @@
 // app/api/users/route.ts
 import { NextRequest, NextResponse } from "next/server";
-import { getMongoClient } from "@/lib/mongo";
+import { userdb } from "@/lib/userdb";
 
 export async function POST(request: NextRequest) {
   try {
     // Connect to the 'database_app' database
-    const db = await getMongoClient();
+    const db = await userdb();
 
     // Parse the request body
     const body = await request.json();
