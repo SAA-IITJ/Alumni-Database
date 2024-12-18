@@ -17,7 +17,7 @@ import {
 // You can use a Zod schema here if you want.
 export type alumdata = {
   id: string
-  name: number
+  name: string
   status: "in contact" | "ghosted" | "never contacted" | "failed"
   programme: string
   passing_year: string
@@ -56,27 +56,39 @@ export const columns: ColumnDef<alumdata>[] = [
   },
   {
     accessorKey: "name",
-    header: "Name",
+    header: (props) => (
+      <div className="text-left font-medium">Name</div>
+    ),
   },
   {
     accessorKey: "passing_year",
-    header: "Passing Year", 
+    header: (props) => (
+      <div className="text-left font-medium">Passing Year</div>
+    ), 
   },
   {
     accessorKey: "programme",
-    header: "Programme",
+    header: (props) => (
+      <div className="text-left font-medium">Programme</div>
+    ),
   },
   {
     accessorKey: "branch",
-    header: "Branch",
+    header: (props) => (
+      <div className="text-left font-medium">Branch</div>
+    ),
   },
   {
     accessorKey: "status",
-    header: "Status",
+    header: (props) => (
+      <div className="text-left font-medium">Status</div>
+    ),
   },
   {
     accessorKey:"contactedBy",
-    header: "Contacted by"
+    header: (props) => (
+      <div className="text-left font-medium">Contacted by</div>
+    ),
   }
 
 ]

@@ -3,6 +3,7 @@
 import { SessionProvider } from "next-auth/react";
 import React from "react";
 import "./globals.css";
+import { ThemeProvider } from "@/components/ui/theme-provider";
 
 export default function RootLayout({
   children,
@@ -11,8 +12,17 @@ export default function RootLayout({
 }) {
   return (
     <SessionProvider>
-      <html lang="en">
-        <body>{children}</body>
+      <html lang="en" suppressHydrationWarning>
+        <body>
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="system"
+            enableSystem
+            disableTransitionOnChange
+          >
+            {children}
+          </ThemeProvider>
+          </body>
       </html>
     </SessionProvider>
   );

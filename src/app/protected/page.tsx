@@ -5,19 +5,40 @@ import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { alumdata, columns } from "./columns"
 import { DataTable } from "./data-table"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Moon, MoonIcon, Sun } from "lucide-react"
+import { useTheme } from "next-themes"
+import { Button } from "@/components/ui/button"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 
 async function getData(): Promise<alumdata[]> {
-  // Fetch data from your API here.
-  return null;
+  try {
+    const response = await fetch('/api/alumni');
+    if (!response.ok) {
+      throw new Error('Failed to fetch alumni data');
+    }
+    return await response.json();
+  } catch (error) {
+    console.error('Error fetching alumni data:', error);
+    return [];
+  }
 }
 
-export default  function ProtectedPage() {
+export default function ProtectedPage() {
+  const { setTheme } = useTheme()
   const { data: session, status } = useSession();
   const router = useRouter();
 
   const [message, setMessage] = useState<string | null>(null);
-
-  
+  const [data, setData] = useState<alumdata[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   // Redirect unauthenticated users
   useEffect(() => {
@@ -26,15 +47,16 @@ export default  function ProtectedPage() {
     }
   }, [status, router]);
 
-  // Call the API when the page loads if the user is authenticated
+  // Fetch alumni data and add user to database
   useEffect(() => {
-    const addUserToDatabase = async () => {
+    const fetchDataAndAddUser = async () => {
       if (status === "authenticated" && session?.user) {
         const { name, email } = session.user;
         const role = "user";
 
         try {
-          const response = await fetch("/api/user", {
+          // Add user to database
+          const userResponse = await fetch("/api/user", {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
@@ -46,15 +68,22 @@ export default  function ProtectedPage() {
             }),
           });
 
-          if (response.ok) {
-            const result = await response.json();
+          if (userResponse.ok) {
+            const result = await userResponse.json();
             setMessage(`User data added: ${result.name}`);
           } else {
-            const error = await response.json();
+            const error = await userResponse.json();
             setMessage(`Error: ${error.error}`);
           }
+
+          // Fetch alumni data
+          setIsLoading(true);
+          const alumniData = await getData();
+          setData(alumniData);
+          setIsLoading(false);
+
         } catch (err: unknown) {
-          // Check if the error is an instance of Error
+          setIsLoading(false);
           if (err instanceof Error) {
             setMessage(`Error: ${err.message}`);
           } else {
@@ -64,22 +93,68 @@ export default  function ProtectedPage() {
       }
     };
 
-    addUserToDatabase();
+    fetchDataAndAddUser();
   }, [status, session]);
 
-  if (status === "loading") {
+  // Loading state
+  if (status === "loading" || isLoading) {
     return <p>Loading...</p>;
   }
 
-  const data =  getData();
-
   return (
-    <div style={{ textAlign: "center", marginTop: "50px" }}>
-      <h1>Protected Page</h1>
-      {session && <p>Welcome, {session.user?.name}!</p>}
+    <div>
+    <div className="flex flex-col items-start md:flex-row md:items-center md:justify-between">
+      <div>
+        <h2 className="scroll-m-20 pb-2 ml-16 text-3xl font-semibold tracking-tight first:mt-8">
+        The Alumni Database
+        </h2>
+        <h3 className="scroll-m-20 border-b-2 text-2xl ml-16 font-semibold tracking-tight">
+          Welcome {session.user?.name}!
+        </h3>
+      </div>
+      <div className="flex flex-col items-start md:flex-row md:items-center md:justify-between mr-32 mt-8">
+        <DropdownMenu>
+          <DropdownMenuTrigger>
+            <Avatar className="ml-auto">
+              <AvatarImage src="https://github.com/shadcn.png" />
+              <AvatarFallback>CN</AvatarFallback>
+            </Avatar>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent>
+            <DropdownMenuLabel>My Account</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem>Profile</DropdownMenuItem>
+            <DropdownMenuItem>Logout</DropdownMenuItem>
+          </DropdownMenuContent>
+      </DropdownMenu>
 
-      {message && <p>{message}</p>}
-      <div className="container mx-auto py-10">
+
+        <div className="ml-8">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="icon">
+                <Sun className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
+                <Moon className="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+                <span className="sr-only">Toggle theme</span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => setTheme("light")}>
+                Light
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setTheme("dark")}>
+                Dark
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setTheme("system")}>
+                System
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+
+      </div>
+    </div>
+    <div className="container mx-auto py-10">
       <DataTable columns={columns} data={data} />
     </div>
     </div>
