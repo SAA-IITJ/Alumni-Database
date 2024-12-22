@@ -193,31 +193,45 @@ export default function ProtectedPage() {
           </h3>
         </div>
         <div className="flex flex-col items-start md:flex-row md:items-center md:justify-between mr-32 mt-8">
-          <DropdownMenu>
-            <DropdownMenuTrigger>
-              <Avatar className="ml-auto">
-                <AvatarImage src="https://github.com/shadcn.png" />
-                <AvatarFallback>CN</AvatarFallback>
-              </Avatar>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent>
-              <DropdownMenuLabel>My Account</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem>
-                <DropdownMenu>
-                  <DropdownMenuTrigger>
-                    Change Role
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent>
-                    <DropdownMenuLabel>Current Role: {userRole}</DropdownMenuLabel>
-                    <DropdownMenuSeparator/>
-                    <DropdownMenuItem onClick={() => handleRoleUpgradeRequest('master')}>Request for Master</DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => handleRoleUpgradeRequest('admin')}>Request for Admin</DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+        <DropdownMenu>
+          <DropdownMenuTrigger>
+            <Avatar className="ml-auto">
+              <AvatarImage src="https://github.com/shadcn.png" />
+              <AvatarFallback>CN</AvatarFallback>
+            </Avatar>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent>
+            <DropdownMenuLabel>My Account</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={() => router.push('/protected')}>
+                Alumni Database
+            </DropdownMenuItem>
+            <DropdownMenuItem>
+              <DropdownMenu>
+                <DropdownMenuTrigger>
+                  Change Role
+                </DropdownMenuTrigger>
+                <DropdownMenuContent>
+                  <DropdownMenuLabel>Current Role: {userRole}</DropdownMenuLabel>
+                  <DropdownMenuSeparator/>
+                  <DropdownMenuItem onClick={() => handleRoleUpgradeRequest('master')}>
+                    Request for Master
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleRoleUpgradeRequest('admin')}>
+                    Request for Admin
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </DropdownMenuItem>
+              {userRole === 'admin' && (
+              <DropdownMenuItem onClick={() => router.push('/Profile')}>
+                Profile
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => signOut()}>Logout</DropdownMenuItem>
-            </DropdownMenuContent>
+              )}
+            <DropdownMenuItem onClick={() => signOut()}>
+              Logout
+            </DropdownMenuItem>
+          </DropdownMenuContent>
           </DropdownMenu>
 
           <div className="ml-8">
@@ -254,23 +268,14 @@ export default function ProtectedPage() {
             }
             className="max-w-sm"
           />
-          <DropdownMenu>
-            <DropdownMenuTrigger>
-              <Input
-                placeholder="Filter Programme..."
-                value={filters.filterProgramme}
-                onChange={(event) =>
-                  setFilters(prev => ({ ...prev, filterProgramme: event.target.value }))
-                }
-                className="max-w-sm"
-              />
-            </DropdownMenuTrigger>
-            <DropdownMenuContent>
-              <DropdownMenuItem>B.Tech.</DropdownMenuItem>
-              <DropdownMenuItem>B.Tech.</DropdownMenuItem>
-              <DropdownMenuItem>B.Tech.</DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <Input
+            placeholder="Filter Programme..."
+            value={filters.filterProgramme}
+            onChange={(event) =>
+              setFilters(prev => ({ ...prev, filterProgramme: event.target.value }))
+            }
+            className="max-w-sm"
+          />
           <Input
             placeholder="Filter Branch..."
             value={filters.filterBranch}
