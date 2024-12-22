@@ -33,7 +33,6 @@ export const columns: ColumnDef<alumdata>[] = [
  
           return (
             <Button variant="outline">Grant</Button>
-
           )
     },
   },

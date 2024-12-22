@@ -53,3 +53,60 @@ export async function POST(request: NextRequest) {
     );
   }
 }
+
+export async function GET(request: NextRequest) {
+  try {
+    // Connect to the database
+    const db = await userdb();
+
+    // Get email from query parameters
+    const url = new URL(request.url);
+    const email = url.searchParams.get('email');
+
+    // Validation
+    if (!email) {
+      return NextResponse.json(
+        { error: "Email parameter is required" },
+        { status: 400 }
+      );
+    }
+
+    // Find user by email
+    const user = await db.collection("users").findOne({ email });
+
+    // If user not found
+    if (!user) {
+      return NextResponse.json(
+        { error: "User not found" },
+        { status: 404 }
+      );
+    }
+
+    // Return user data
+    return NextResponse.json(
+      {
+        message: "User found successfully",
+        user: {
+          id: user._id,
+          name: user.name,
+          email: user.email,
+          role: user.role
+        }
+      },
+      { status: 200 }
+    );
+
+  } catch (error) {
+    console.error("Error fetching user:", error);
+
+    return NextResponse.json(
+      {
+        error: "Internal Server Error",
+        details: error instanceof Error ? error.message : "Unknown error"
+      },
+      { status: 500 }
+    );
+  }
+}
+
+

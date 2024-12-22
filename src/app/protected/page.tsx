@@ -55,12 +55,36 @@ export default function ProtectedPage() {
   const [message, setMessage] = useState<string | null>(null);
   const [data, setData] = useState<alumdata[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [userRole, setUserRole] = useState<string | null>(null);
   const [filters, setFilters] = useState({
     filterName: '',
     filterBranch: '',
     filterProgramme: '',
     filterYear: ''
   });
+
+  const fetchUserRole = async (email: string) => {
+    try {
+      const response = await fetch(`/api/user?email=${encodeURIComponent(email)}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch user data');
+      }
+      const userData = await response.json();
+      setUserRole(userData.user.role);
+    } catch (error) {
+      console.error('Error fetching user role:', error);
+      setUserRole(null);
+    }
+  };
+
+    // Effect for authentication check and fetching user role
+    useEffect(() => {
+      if (status === "unauthenticated") {
+        router.push("/");
+      } else if (status === "authenticated" && session?.user?.email) {
+        fetchUserRole(session.user.email);
+      }
+    }, [status, router, session]);
 
   // Effect for authentication check  
   useEffect(() => {
@@ -141,7 +165,39 @@ export default function ProtectedPage() {
     return <p>Loading...</p>;
   }
 
-  console.log(data);
+  const handleRoleUpgradeRequest = async (requestedRole: string) => {
+    if (!session?.user?.name || !session?.user?.email || !userRole) {
+      setMessage("Missing user information");
+      return;
+    }
+
+    try {
+      const response = await fetch("/api/admin", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name: session.user.name,
+          email: session.user.email,
+          currentRole: userRole,
+          requestedRole: requestedRole
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setMessage(`Role upgrade request to ${requestedRole} submitted successfully`);
+      } else {
+        setMessage(data.error || "Failed to submit role upgrade request");
+      }
+    } catch (error) {
+      console.error("Error submitting role upgrade request:", error);
+      setMessage("Error submitting role upgrade request");
+    }
+  };
+
 
   return (
     <div>
@@ -165,7 +221,19 @@ export default function ProtectedPage() {
             <DropdownMenuContent>
               <DropdownMenuLabel>My Account</DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem>Change Role</DropdownMenuItem>
+              <DropdownMenuItem >
+                <DropdownMenu>
+                  <DropdownMenuTrigger>
+                      Change Role
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent>
+                    <DropdownMenuLabel>Current Role: {userRole}</DropdownMenuLabel>
+                    <DropdownMenuSeparator/>
+                    <DropdownMenuItem onClick={() => handleRoleUpgradeRequest('master')}>Request for Master</DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => handleRoleUpgradeRequest('admin')}>Request for Admin</DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </DropdownMenuItem>
               <DropdownMenuItem onClick={() => signOut()}>Logout</DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
