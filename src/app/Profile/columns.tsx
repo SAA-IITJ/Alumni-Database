@@ -1,8 +1,6 @@
 "use client"
 
 import { ColumnDef } from "@tanstack/react-table"
-import { MoreHorizontal } from "lucide-react"
-
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
@@ -13,47 +11,84 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 
-// This type is used to define the shape of our data.
-// You can use a Zod schema here if you want.
+// Updated type to match the data structure
 export type alumdata = {
   id: string
   name: string
-  status: "in contact" | "ghosted" | "never contacted" | "failed"
-  programme: string
-  passing_year: string
-  branch: string
-  contactedBy: string
+  email: string
+  currentRole: string
+  requestedRole: string
+  status?: "in contact" | "ghosted" | "never contacted" | "failed"
+  programme?: string
+  passing_year?: string
+  branch?: string
+  contactedBy?: string
 }
+
+// Function to handle the grant request
+const handleGrantRequest = async (userData: alumdata) => {
+  try {
+    const response = await fetch('/api/admin', {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        name: userData.name,
+        email: userData.email,
+        currentRole: userData.currentRole,
+        requestedRole: userData.requestedRole,
+        Validation: 'Approved'  // Approving the request
+      }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Failed to grant role');
+    }
+
+    const data = await response.json();
+    alert(data.message); // Show success message
+    // You might want to refresh the data here or update the UI
+    window.location.reload(); // Simple reload to refresh the data
+
+  } catch (error) {
+    console.error('Error granting role:', error);
+    alert(error instanceof Error ? error.message : 'Failed to grant role');
+  }
+};
 
 export const columns: ColumnDef<alumdata>[] = [
   {
     id: "actions",
     cell: ({ row }) => {
-      const payment = row.original
- 
-          return (
-            <Button variant="outline">Grant</Button>
-          )
+      const userData = row.original;
+      return (
+        <Button 
+          variant="outline" 
+          onClick={() => handleGrantRequest(userData)}
+        >
+          Grant
+        </Button>
+      )
     },
   },
   {
     accessorKey: "name",
-    header: (props) => (
+    header: () => (
       <div className="text-left font-medium">Name</div>
     ),
   },
   {
     accessorKey: "currentRole",
-    header: (props) => (
+    header: () => (
       <div className="text-left font-medium">Current role</div>
     ),
   },
   {
     accessorKey: "requestedRole",
-    header: (props) => (
+    header: () => (
       <div className="text-left font-medium">Requested role</div>
     ),
   },
- 
-
 ]

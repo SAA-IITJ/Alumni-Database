@@ -272,19 +272,28 @@ export default function ProtectedPage() {
             }
             className="max-w-sm"
           />
+          <DropdownMenu>
+            <DropdownMenuTrigger>
+                <Input
+                placeholder="Filter Programme..."
+                value={filters.filterProgramme}
+                onChange={(event) =>
+                  setFilters(prev => ({ ...prev, filterProgramme: event.target.value }))
+                }
+                className="max-w-sm"
+                />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+              <DropdownMenuItem>B.Tech.</DropdownMenuItem>
+              <DropdownMenuItem>B.Tech.</DropdownMenuItem>
+              <DropdownMenuItem>B.Tech.</DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
           <Input
             placeholder="Filter Branch..."
             value={filters.filterBranch}
             onChange={(event) =>
               setFilters(prev => ({ ...prev, filterBranch: event.target.value }))
-            }
-            className="max-w-sm"
-          />
-          <Input
-            placeholder="Filter Programme..."
-            value={filters.filterProgramme}
-            onChange={(event) =>
-              setFilters(prev => ({ ...prev, filterProgramme: event.target.value }))
             }
             className="max-w-sm"
           />
