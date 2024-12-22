@@ -72,7 +72,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Find user by email
-    const user = await db.collection("users").findOne({ email });
+    const user = await db.collection("users").findOne({ "email" : email });
 
     // If user not found
     if (!user) {

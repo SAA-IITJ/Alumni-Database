@@ -153,7 +153,13 @@ export const columns: ColumnDef<alumdata>[] = [
   {
     accessorKey:"email",
     header: (props) => (
-      <div className="text-left font-medium">Contacted by</div>
+      <div className="text-left font-medium">E mail</div>
+    ),
+  },
+  {
+    accessorKey:"Phone",
+    header: (props) => (
+      <div className="text-left font-medium">Phone Number</div>
     ),
   }
 

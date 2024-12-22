@@ -166,12 +166,17 @@ export default function ProtectedPage() {
   }
 
   const handleRoleUpgradeRequest = async (requestedRole: string) => {
+    console.log("started");
+    console.log(session.user.email);
+    console.log(session?.user.name);
+    console.log(userRole);
     if (!session?.user?.name || !session?.user?.email || !userRole) {
       setMessage("Missing user information");
       return;
     }
 
     try {
+      console.log("inside try");
       const response = await fetch("/api/admin", {
         method: "POST",
         headers: {
@@ -181,7 +186,7 @@ export default function ProtectedPage() {
           name: session.user.name,
           email: session.user.email,
           currentRole: userRole,
-          requestedRole: requestedRole
+          requestedRole: requestedRole, 
         }),
       });
 
