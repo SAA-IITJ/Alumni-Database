@@ -24,11 +24,14 @@ export async function GET(request: NextRequest) {
     if (filterYear) query.year_of_Graduation = parseFloat(filterYear);
 
     // Determine the projection based on role
-    const projection = role === 'user' ? { Phone: 0 } : {}; // Exclude phone for 'user'
+   
     console.log(query);
+    let projection: Record<string, any> = {};
+    if (role === "user") {
+      projection.Phone = 0; // Exclude Phone for 'user' role
+    }
 
-    // Fetch data from MongoDB based on query and projection
-    const results = await db.collection('AlumniData').find(query, { projection }).toArray();
+    const results = await db.collection('AlumniData').find(query, {  projection  }).toArray();
 
     // Return the filtered results in JSON format
     return NextResponse.json({ data: results }, { status: 200 });

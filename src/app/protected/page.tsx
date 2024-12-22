@@ -71,51 +71,39 @@ export default function ProtectedPage() {
       }
       const userData = await response.json();
       setUserRole(userData.user.role);
+      return userData.user.role;
     } catch (error) {
       console.error('Error fetching user role:', error);
       setUserRole(null);
+      return null;
     }
   };
 
-    // Effect for authentication check and fetching user role
-    useEffect(() => {
+  const fetchDataWithRole = async (role: string) => {
+    setIsLoading(true);
+    try {
+      const alumniData = await getData(filters, role);
+      setData(alumniData);
+    } catch (error) {
+      console.error('Error fetching alumni data:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Combined effect for authentication, role fetching, and data fetching
+  useEffect(() => {
+    const initializeUserData = async () => {
       if (status === "unauthenticated") {
         router.push("/");
-      } else if (status === "authenticated" && session?.user?.email) {
-        fetchUserRole(session.user.email);
+        return;
       }
-    }, [status, router, session]);
 
-  // Effect for authentication check  
-  useEffect(() => {
-    if (status === "unauthenticated") {
-      router.push("/");
-    }
-  }, [status, router]);
-
-  // Function to handle filter button click
-  const handleFilterClick = async () => {
-    if (status === "authenticated") {
-      console.log("started");
-      setIsLoading(true);
-      const role = "user"; // Or get from session if you have role information
-      const filteredData = await getData(filters, role);
-      setData(filteredData);
-      setIsLoading(false);
-      console.log(filteredData);
-    }
-  };
-
-  // Initial data fetch
-  useEffect(() => {
-    const fetchDataAndAddUser = async () => {
-      if (status === "authenticated" && session?.user) {
-        const { name, email } = session.user;
-        const role = "user";
-
+      if (status === "authenticated" && session?.user?.email) {
         try {
-          // Add user to database
-          const userResponse = await fetch("/api/user", {
+          // First, add/update user in database
+          const { name, email } = session.user;
+          await fetch("/api/user", {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
@@ -123,60 +111,41 @@ export default function ProtectedPage() {
             body: JSON.stringify({
               name,
               email,
-              role   
+              role: "user" // Default role for new users
             }),
           });
 
-          if (userResponse.ok) {
-            const result = await userResponse.json();
-            setMessage(`User data added: ${result.name}`);
-          } else {
-            const error = await userResponse.json();
-            setMessage(`Error: ${error.error}`);
+          // Then fetch the current role
+          const currentRole = await fetchUserRole(email);
+          
+          // Finally fetch data with the current role
+          if (currentRole) {
+            await fetchDataWithRole(currentRole);
           }
-
-          // Fetch initial alumni data with empty filters
-          setIsLoading(true);
-          const alumniData = await getData({
-            filterName: '',
-            filterBranch: '',
-            filterProgramme: '',
-            filterYear: ''
-          }, role);
-          setData(alumniData);
-          setIsLoading(false);
-
-        } catch (err: unknown) {
-          setIsLoading(false);
-          if (err instanceof Error) {
-            setMessage(`Error: ${err.message}`);
-          } else {
-            setMessage("An unknown error occurred");
-          }
+        } catch (err) {
+          console.error('Error initializing user data:', err);
+          setMessage(err instanceof Error ? err.message : "An unknown error occurred");
         }
       }
     };
 
-    fetchDataAndAddUser();
-  }, [status, session]);
+    initializeUserData();
+  }, [status, session, router]);
 
-  // Loading state
-  if (status === "loading" || isLoading) {
-    return <p>Loading...</p>;
-  }
+  // Handle filter button click
+  const handleFilterClick = async () => {
+    if (status === "authenticated" && userRole) {
+      await fetchDataWithRole(userRole);
+    }
+  };
 
   const handleRoleUpgradeRequest = async (requestedRole: string) => {
-    console.log("started");
-    console.log(session.user.email);
-    console.log(session?.user.name);
-    console.log(userRole);
     if (!session?.user?.name || !session?.user?.email || !userRole) {
       setMessage("Missing user information");
       return;
     }
 
     try {
-      console.log("inside try");
       const response = await fetch("/api/admin", {
         method: "POST",
         headers: {
@@ -186,7 +155,7 @@ export default function ProtectedPage() {
           name: session.user.name,
           email: session.user.email,
           currentRole: userRole,
-          requestedRole: requestedRole, 
+          requestedRole: requestedRole,
         }),
       });
 
@@ -194,6 +163,10 @@ export default function ProtectedPage() {
 
       if (response.ok) {
         setMessage(`Role upgrade request to ${requestedRole} submitted successfully`);
+        // Refresh user role after successful request
+        if (session?.user?.email) {
+          await fetchUserRole(session.user.email);
+        }
       } else {
         setMessage(data.error || "Failed to submit role upgrade request");
       }
@@ -203,6 +176,10 @@ export default function ProtectedPage() {
     }
   };
 
+  // Loading state
+  if (status === "loading" || isLoading) {
+    return <p>Loading...</p>;
+  }
 
   return (
     <div>
@@ -212,7 +189,7 @@ export default function ProtectedPage() {
             The Alumni Database
           </h2>
           <h3 className="scroll-m-20 border-b-2 text-2xl ml-16 font-semibold tracking-tight">
-            Welcome {session.user?.name}!
+            Welcome {session?.user?.name}!
           </h3>
         </div>
         <div className="flex flex-col items-start md:flex-row md:items-center md:justify-between mr-32 mt-8">
@@ -226,10 +203,10 @@ export default function ProtectedPage() {
             <DropdownMenuContent>
               <DropdownMenuLabel>My Account</DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem >
+              <DropdownMenuItem>
                 <DropdownMenu>
                   <DropdownMenuTrigger>
-                      Change Role
+                    Change Role
                   </DropdownMenuTrigger>
                   <DropdownMenuContent>
                     <DropdownMenuLabel>Current Role: {userRole}</DropdownMenuLabel>
@@ -279,14 +256,14 @@ export default function ProtectedPage() {
           />
           <DropdownMenu>
             <DropdownMenuTrigger>
-                <Input
+              <Input
                 placeholder="Filter Programme..."
                 value={filters.filterProgramme}
                 onChange={(event) =>
                   setFilters(prev => ({ ...prev, filterProgramme: event.target.value }))
                 }
                 className="max-w-sm"
-                />
+              />
             </DropdownMenuTrigger>
             <DropdownMenuContent>
               <DropdownMenuItem>B.Tech.</DropdownMenuItem>
