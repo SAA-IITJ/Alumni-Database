@@ -55,25 +55,25 @@ export const columns: ColumnDef<alumdata>[] = [
     },
   },
   {
-    accessorKey: "name",
+    accessorKey: "Name",
     header: (props) => (
       <div className="text-left font-medium">Name</div>
     ),
   },
   {
-    accessorKey: "passing_year",
+    accessorKey: "year_of_Graduation",
     header: (props) => (
       <div className="text-left font-medium">Passing Year</div>
     ), 
   },
   {
-    accessorKey: "programme",
+    accessorKey: "Degree",
     header: (props) => (
       <div className="text-left font-medium">Programme</div>
     ),
   },
   {
-    accessorKey: "branch",
+    accessorKey: "Branch",
     header: (props) => (
       <div className="text-left font-medium">Branch</div>
     ),

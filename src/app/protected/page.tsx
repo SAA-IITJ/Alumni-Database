@@ -72,6 +72,7 @@ export default function ProtectedPage() {
   // Function to handle filter button click
   const handleFilterClick = async () => {
     if (status === "authenticated") {
+      console.log("started");
       setIsLoading(true);
       const role = "user"; // Or get from session if you have role information
       const filteredData = await getData(filters, role);
@@ -164,7 +165,7 @@ export default function ProtectedPage() {
             <DropdownMenuContent>
               <DropdownMenuLabel>My Account</DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem>Profile</DropdownMenuItem>
+              <DropdownMenuItem>Change Role</DropdownMenuItem>
               <DropdownMenuItem onClick={() => signOut()}>Logout</DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
