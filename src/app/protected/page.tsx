@@ -9,6 +9,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Moon, MoonIcon, Sun } from "lucide-react"
 import { useTheme } from "next-themes"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -18,12 +19,20 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { signOut } from "next-auth/react";
+
 async function getData(filters: any, role: string): Promise<alumdata[]> {
   try {
-    const response = await fetch('/api/alumni', {
-      method: 'GET', // Use POST to send filters in the request body
+    const queryParams = new URLSearchParams({
+      filterName: filters.filterName || '',
+      filterBranch: filters.filterBranch || '',
+      filterProgramme: filters.filterProgramme || '',
+      filterYear: filters.filterYear || '',
+      role: role
+    });
+
+    const response = await fetch(`/api/alumni?${queryParams.toString()}`, {
+      method: 'GET',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ...filters, role }), // Include filters and role
     });
 
     if (!response.ok) {
@@ -31,7 +40,7 @@ async function getData(filters: any, role: string): Promise<alumdata[]> {
     }
 
     const result = await response.json();
-    return result.data; // Extract 'data' field from the response
+    return result.data;
   } catch (error) {
     console.error('Error fetching alumni data:', error);
     return [];
@@ -46,15 +55,33 @@ export default function ProtectedPage() {
   const [message, setMessage] = useState<string | null>(null);
   const [data, setData] = useState<alumdata[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [filters, setFilters] = useState({
+    filterName: '',
+    filterBranch: '',
+    filterProgramme: '',
+    filterYear: ''
+  });
 
-  // Redirect unauthenticated users
+  // Effect for authentication check  
   useEffect(() => {
     if (status === "unauthenticated") {
       router.push("/");
     }
   }, [status, router]);
 
-  // Fetch alumni data and add user to database
+  // Function to handle filter button click
+  const handleFilterClick = async () => {
+    if (status === "authenticated") {
+      setIsLoading(true);
+      const role = "user"; // Or get from session if you have role information
+      const filteredData = await getData(filters, role);
+      setData(filteredData);
+      setIsLoading(false);
+      console.log(filteredData);
+    }
+  };
+
+  // Initial data fetch
   useEffect(() => {
     const fetchDataAndAddUser = async () => {
       if (status === "authenticated" && session?.user) {
@@ -83,9 +110,14 @@ export default function ProtectedPage() {
             setMessage(`Error: ${error.error}`);
           }
 
-          // Fetch alumni data
+          // Fetch initial alumni data with empty filters
           setIsLoading(true);
-          const alumniData = await getData();
+          const alumniData = await getData({
+            filterName: '',
+            filterBranch: '',
+            filterProgramme: '',
+            filterYear: ''
+          }, role);
           setData(alumniData);
           setIsLoading(false);
 
@@ -108,64 +140,97 @@ export default function ProtectedPage() {
     return <p>Loading...</p>;
   }
 
-
+  console.log(data);
 
   return (
     <div>
-    <div className="flex flex-col items-start md:flex-row md:items-center md:justify-between">
-      <div>
-        <h2 className="scroll-m-20 pb-2 ml-16 text-3xl font-semibold tracking-tight first:mt-8">
-        The Alumni Database
-        </h2>
-        <h3 className="scroll-m-20 border-b-2 text-2xl ml-16 font-semibold tracking-tight">
-          Welcome {session.user?.name}!
-        </h3>
-      </div>
-      <div className="flex flex-col items-start md:flex-row md:items-center md:justify-between mr-32 mt-8">
-        <DropdownMenu>
-          <DropdownMenuTrigger>
-            <Avatar className="ml-auto">
-              <AvatarImage src="https://github.com/shadcn.png" />
-              <AvatarFallback>CN</AvatarFallback>
-            </Avatar>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent>
-            <DropdownMenuLabel>My Account</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem >Profile</DropdownMenuItem>
-            <DropdownMenuItem onClick={() => signOut()}>Logout</DropdownMenuItem>
-          </DropdownMenuContent>
-      </DropdownMenu>
-
-
-        <div className="ml-8">
+      <div className="flex flex-col items-start md:flex-row md:items-center md:justify-between">
+        <div>
+          <h2 className="scroll-m-20 pb-2 ml-16 text-3xl font-semibold tracking-tight first:mt-8">
+            The Alumni Database
+          </h2>
+          <h3 className="scroll-m-20 border-b-2 text-2xl ml-16 font-semibold tracking-tight">
+            Welcome {session.user?.name}!
+          </h3>
+        </div>
+        <div className="flex flex-col items-start md:flex-row md:items-center md:justify-between mr-32 mt-8">
           <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="icon">
-                <Sun className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
-                <Moon className="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
-                <span className="sr-only">Toggle theme</span>
-              </Button>
+            <DropdownMenuTrigger>
+              <Avatar className="ml-auto">
+                <AvatarImage src="https://github.com/shadcn.png" />
+                <AvatarFallback>CN</AvatarFallback>
+              </Avatar>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => setTheme("light")}>
-                Light
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setTheme("dark")}>
-                Dark
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setTheme("system")}>
-                System
-              </DropdownMenuItem>
+            <DropdownMenuContent>
+              <DropdownMenuLabel>My Account</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem>Profile</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => signOut()}>Logout</DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-        </div>
 
+          <div className="ml-8">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="icon">
+                  <Sun className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
+                  <Moon className="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+                  <span className="sr-only">Toggle theme</span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => setTheme("light")}>
+                  Light
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setTheme("dark")}>
+                  Dark
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setTheme("system")}>
+                  System
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        </div>
       </div>
-    </div>
-    <div className="container mx-auto py-10">
-      <DataTable columns={columns} data={data} />
-    </div>
+      <div className="container mx-auto py-10">
+        <div className="flex items-center py-4 gap-4">
+          <Input
+            placeholder="Filter names..."
+            value={filters.filterName}
+            onChange={(event) =>
+              setFilters(prev => ({ ...prev, filterName: event.target.value }))
+            }
+            className="max-w-sm"
+          />
+          <Input
+            placeholder="Filter Branch..."
+            value={filters.filterBranch}
+            onChange={(event) =>
+              setFilters(prev => ({ ...prev, filterBranch: event.target.value }))
+            }
+            className="max-w-sm"
+          />
+          <Input
+            placeholder="Filter Programme..."
+            value={filters.filterProgramme}
+            onChange={(event) =>
+              setFilters(prev => ({ ...prev, filterProgramme: event.target.value }))
+            }
+            className="max-w-sm"
+          />
+          <Input
+            placeholder="Filter Year..."
+            value={filters.filterYear}
+            onChange={(event) =>
+              setFilters(prev => ({ ...prev, filterYear: event.target.value }))
+            }
+            className="max-w-sm"
+          />
+          <Button onClick={handleFilterClick}>Filter</Button>
+        </div>
+        <DataTable columns={columns} data={data} />
+      </div>
     </div>
   );
 }

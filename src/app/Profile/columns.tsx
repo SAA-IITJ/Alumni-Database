@@ -46,13 +46,13 @@ export const columns: ColumnDef<alumdata>[] = [
   {
     accessorKey: "currentRole",
     header: (props) => (
-      <div className="text-left font-medium">current role</div>
+      <div className="text-left font-medium">Current role</div>
     ),
   },
   {
     accessorKey: "requestedRole",
     header: (props) => (
-      <div className="text-left font-medium">Upgraded role</div>
+      <div className="text-left font-medium">Requested role</div>
     ),
   },
  
