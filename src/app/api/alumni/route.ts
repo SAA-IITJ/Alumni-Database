@@ -37,3 +37,58 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Failed to fetch data' }, { status: 500 });
   }
 }
+
+export async function PUT(request: NextRequest) {
+  try {
+    // Parse the request body
+    const body = await request.json();
+
+    const { email, updated_status, contactedby } = body;
+
+    // Validate input
+    if (!email || !updated_status || !contactedby) {
+      return NextResponse.json({ error: 'Email, updated_status, and contactedby are required' }, { status: 400 });
+    }
+
+    // Connect to the database
+    const db = await userdb();
+    const AlumniData = db.collection('AlumniData');
+
+    // Find the alumni record by email
+    const alumni = await AlumniData.findOne({ "E-mail" :  email });
+    if (!alumni) {
+      return NextResponse.json({ error: 'Alumni not found' }, { status: 404 });
+    }
+
+    // Update both `status` and `contactedby` regardless of the previous state
+    if(alumni.status == "not contacted"){
+    await AlumniData.updateOne(
+      { "E-mail" : email },
+      {
+        $set: {
+          status: updated_status,
+          contacted_by : contactedby,
+        },
+      }
+    );
+  }
+  else{
+    await AlumniData.updateOne(
+      { email },
+      {
+        $set: {
+          status: updated_status,
+        },
+      }
+    );
+  }
+
+    // Respond with success
+    return NextResponse.json({ message: 'Alumni data updated successfully' }, { status: 200 });
+  } catch (error) {
+    console.error('Error updating alumni data:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  }
+}
+
+
