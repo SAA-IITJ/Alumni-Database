@@ -54,8 +54,9 @@ async function updateStatus( email, updated_status, contactedby ) {
     const result = await response.json();
     console.log('Result:', result);
 
-    // Return the relevant data
-    return result.message; // Return the success message
+    window.location.reload();
+    return result.message;
+      // Return the success message
   } catch (error) {
     console.error('Error updating alumni data:', error);
     return null; // Return `null` to indicate failure
@@ -150,7 +151,7 @@ export const columns: ColumnDef<alumdata>[] = [
     ),
   },
   {
-    accessorKey:"E-mail",
+    accessorKey:"email",
     header: (props) => (
       <div className="text-left font-medium">Contacted by</div>
     ),
