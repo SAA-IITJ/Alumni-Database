@@ -55,7 +55,7 @@ export async function PUT(request: NextRequest) {
     const AlumniData = db.collection('AlumniData');
 
     // Find the alumni record by email
-    const alumni = await AlumniData.findOne({ "E-mail" :  email });
+    const alumni = await AlumniData.findOne({ "email" :  email });
     if (!alumni) {
       return NextResponse.json({ error: 'Alumni not found' }, { status: 404 });
     }
@@ -63,7 +63,7 @@ export async function PUT(request: NextRequest) {
     // Update both `status` and `contactedby` regardless of the previous state
     if(alumni.status == "not contacted"){
     await AlumniData.updateOne(
-      { "E-mail" : email },
+      { "email" : email },
       {
         $set: {
           status: updated_status,
@@ -72,9 +72,21 @@ export async function PUT(request: NextRequest) {
       }
     );
   }
+
+  else if(updated_status == "not contacted"){
+    await AlumniData.updateOne(
+      { "email" : email },
+      {
+        $set: {
+          status: updated_status,
+          contacted_by : "",
+        },
+      }
+    );
+  }
   else{
     await AlumniData.updateOne(
-      { email },
+      { "email" : email },
       {
         $set: {
           status: updated_status,

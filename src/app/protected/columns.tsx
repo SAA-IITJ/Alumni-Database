@@ -2,7 +2,7 @@
 
 import { ColumnDef } from "@tanstack/react-table"
 import { MoreHorizontal } from "lucide-react"
-
+import { useSession } from "next-auth/react";
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
@@ -23,14 +23,52 @@ export type alumdata = {
   passing_year: string
   branch: string
   contactedBy: string
+  email : string
 }
+
+
+async function updateStatus( email, updated_status, contactedby ) {
+  console.log(email);
+  try {
+    
+    // Make the PUT request to the API
+    const response = await fetch('/api/alumni', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email,
+        updated_status,
+        contactedby,
+      }),
+    });
+
+    console.log('Response:', response);
+
+    // Check if the response is not OK
+    if (!response.ok) {
+      const errorResponse = await response.json();
+      throw new Error(errorResponse.error || 'Failed to update alumni data');
+    }
+
+    // Parse the JSON response
+    const result = await response.json();
+    console.log('Result:', result);
+
+    // Return the relevant data
+    return result.message; // Return the success message
+  } catch (error) {
+    console.error('Error updating alumni data:', error);
+    return null; // Return `null` to indicate failure
+  }
+}
+
 
 export const columns: ColumnDef<alumdata>[] = [
   {
     id: "actions",
     cell: ({ row }) => {
-      const payment = row.original
- 
+      const alum = row.original
+      const { data: session } = useSession(); 
           return (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -40,15 +78,36 @@ export const columns: ColumnDef<alumdata>[] = [
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                <DropdownMenuItem
-                  onClick={() => navigator.clipboard.writeText(payment.id)}
-                >
-                  Copy payment ID
-                </DropdownMenuItem>
+                <DropdownMenuLabel>Status</DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem>View customer</DropdownMenuItem>
-                <DropdownMenuItem>View payment details</DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() =>{
+                    console.log(alum.email);
+                    updateStatus(
+                      alum.email,
+                       "in contact",
+                       session.user.name, // Replace with the actual user's name if available
+                    )}}
+                >
+                  contacted
+                </DropdownMenuItem>
+                
+                <DropdownMenuItem
+                onClick={() =>
+                  updateStatus(
+                  alum.email,
+                    "ghosted",
+                     session.user.name, // Replace with the actual user's name if available
+                  )}
+                  >ghosted</DropdownMenuItem>
+                <DropdownMenuItem
+                onClick={() =>
+                  updateStatus(
+                    alum.email,
+                     "not contacted",
+                     session.user.name, // Replace with the actual user's name if available
+                  )}
+                  >not contacted</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           )
@@ -85,7 +144,13 @@ export const columns: ColumnDef<alumdata>[] = [
     ),
   },
   {
-    accessorKey:"contactedBy",
+    accessorKey:"contacted_by",
+    header: (props) => (
+      <div className="text-left font-medium">Contacted by</div>
+    ),
+  },
+  {
+    accessorKey:"E-mail",
     header: (props) => (
       <div className="text-left font-medium">Contacted by</div>
     ),
