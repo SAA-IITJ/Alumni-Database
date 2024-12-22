@@ -18,13 +18,20 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { signOut } from "next-auth/react";
-async function getData(): Promise<alumdata[]> {
+async function getData(filters: any, role: string): Promise<alumdata[]> {
   try {
-    const response = await fetch('/api/alumni');
+    const response = await fetch('/api/alumni', {
+      method: 'GET', // Use POST to send filters in the request body
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ...filters, role }), // Include filters and role
+    });
+
     if (!response.ok) {
       throw new Error('Failed to fetch alumni data');
     }
-    return await response.json();
+
+    const result = await response.json();
+    return result.data; // Extract 'data' field from the response
   } catch (error) {
     console.error('Error fetching alumni data:', error);
     return [];
