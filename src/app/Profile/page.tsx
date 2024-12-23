@@ -111,6 +111,7 @@ export default function ProtectedPage() {
           const alumniData = await getData();
           setData(alumniData);
         } catch (err: unknown) {
+          console.log(err);
         } finally {
           setIsLoading(false);
         }
@@ -187,7 +188,7 @@ export default function ProtectedPage() {
         }),
       });
 
-      const result = await response.json();
+      await response.json();
     } catch (error) {
       console.error("Error submitting role upgrade request:", error);
     }

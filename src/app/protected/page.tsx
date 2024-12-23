@@ -51,8 +51,6 @@ export default function ProtectedPage() {
   const { setTheme } = useTheme()
   const { data: session, status } = useSession();
   const router = useRouter();
-
-  const [message, setMessage] = useState<string | null>(null);
   const [data, setData] = useState<alumdata[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [userRole, setUserRole] = useState<string | null>(null);
@@ -124,7 +122,6 @@ export default function ProtectedPage() {
           }
         } catch (err) {
           console.error('Error initializing user data:', err);
-          setMessage(err instanceof Error ? err.message : "An unknown error occurred");
         }
       }
     };
@@ -141,7 +138,6 @@ export default function ProtectedPage() {
 
   const handleRoleUpgradeRequest = async (requestedRole: string) => {
     if (!session?.user?.name || !session?.user?.email || !userRole) {
-      setMessage("Missing user information");
       return;
     }
 
@@ -162,17 +158,14 @@ export default function ProtectedPage() {
       const data = await response.json();
 
       if (response.ok) {
-        setMessage(`Role upgrade request to ${requestedRole} submitted successfully`);
         // Refresh user role after successful request
         if (session?.user?.email) {
           await fetchUserRole(session.user.email);
         }
       } else {
-        setMessage(data.error || "Failed to submit role upgrade request");
       }
     } catch (error) {
       console.error("Error submitting role upgrade request:", error);
-      setMessage("Error submitting role upgrade request");
     }
   };
 

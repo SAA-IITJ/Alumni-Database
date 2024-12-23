@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
     const role = url.searchParams.get('role');
 
     // Construct the query based on filters
-    const query: Record<string, any> = {};
+    const query: Record<string, string | number> = {};
     if (filterName) query.Name = filterName;
     if (filterBranch) query.Branch = filterBranch;
     if (filterProgramme) query.Degree = filterProgramme;
@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
     // Determine the projection based on role
    
     console.log(query);
-    let projection: Record<string, any> = {};
+    const projection: Record<string, string | number> = {};
     if (role === "user") {
       projection.Phone = 0; // Exclude Phone for 'user' role
     }
