@@ -3,7 +3,7 @@
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
-import { alumdata, columns } from "./columns"
+import { columns } from "./columns"
 import { DataTable } from "./data-table"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Moon, Sun } from "lucide-react"
