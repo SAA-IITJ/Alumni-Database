@@ -119,3 +119,60 @@ export async function GET(request: NextRequest) {
 }
 
 
+export async function POST(request: NextRequest) {
+  try {
+    
+    const db = await userdb();
+
+    
+    const body = await request.json();
+    const {  email } = body;
+
+    if ( !email) {
+      return NextResponse.json(
+        { error: " email is required" },
+        { status: 400 }
+      );
+    }
+
+    const existingUser = await db.collection("users").findOne({ email });
+    if (existingUser) {
+      return NextResponse.json(
+        { error: "User with this name already exists" },
+        { status: 409 }
+      );
+    }
+
+ 
+    const result = await db.collection("users").insertOne({
+      email: email,
+      name: "",
+      role: ""
+    });
+
+    if (!result.acknowledged) {
+      return NextResponse.json(
+        { error: "User could not be created" },
+        { status: 500 }
+      );
+    }
+    
+    return NextResponse.json(
+      { message: "User created successfully", userId: result.insertedId },
+      { status: 201 }
+    );
+
+  } catch (error) {
+    console.error("User update error:", error);
+
+    // Handle specific errors
+    return NextResponse.json(
+      {
+        error: "Internal Server Error",
+        details: error instanceof Error ? error.message : "Unknown error",
+      },
+      { status: 500 }
+    );
+  }
+}
+
