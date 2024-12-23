@@ -1,4 +1,3 @@
-// api/auth/[...nextauth]/route.ts
 import NextAuth, { NextAuthOptions, Session, Account, User } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 import { userdb } from "@/lib/userdb";
@@ -29,7 +28,7 @@ const isAllowedEmail = async (email: string): Promise<boolean> => {
   }
 };
 
-export const authOptions: NextAuthOptions = {
+const authOptions: NextAuthOptions = {
   providers: [
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID!,
@@ -59,5 +58,7 @@ export const authOptions: NextAuthOptions = {
   },
 };
 
+// Create and export the route handlers
 const handler = NextAuth(authOptions);
-export { handler as GET, handler as POST };
+export const GET = handler;
+export const POST = handler;
