@@ -189,7 +189,7 @@ export default function ProtectedPage() {
         <DropdownMenu>
           <DropdownMenuTrigger>
             <Avatar className="ml-auto">
-              <AvatarImage src={session.user.image} />
+              <AvatarImage src={session?.user?.image ?? undefined} />
               <AvatarFallback>CN</AvatarFallback>
             </Avatar>
           </DropdownMenuTrigger>
