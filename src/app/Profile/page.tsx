@@ -10,6 +10,7 @@ import { Moon, Sun } from "lucide-react"
 import { useTheme } from "next-themes"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { Alert, AlertDescription } from '@/components/ui/alert'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -125,37 +126,53 @@ export default function ProtectedPage() {
     fetchDataAndAddUser();
   }, [status, session]);
 
-    const [email, setEmail] = useState("");
-    const [responseMessage, setResponseMessage] = useState("");
-  
-    const handleAddUser = async () => {
-      if (!email.trim()) {
-        setResponseMessage("Please enter a valid email.");
-        return;
-      }
-  
-      try {
-        const response = await fetch("/api/user", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ email }),
+  const [email, setEmail] = useState("");
+  const [alert, setAlert] = useState({ message: '', type: '', show: false });
+
+  const handleAddUser = async () => {
+    if (!email.trim()) {
+      setAlert({
+        message: "Please enter a valid email.",
+        type: 'error',
+        show: true
+      });
+      return;
+    }
+
+    try {
+      const response = await fetch("/api/user", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email }),
+      });
+
+      const data = await response.json();
+      
+      if (response.status === 201) {
+        setAlert({
+          message: data.message || "User added successfully.",
+          type: 'success',
+          show: true
         });
-  
-        const data = await response.json();
-        if(data.status === 201){
-          setResponseMessage(data.message || "User added successfully.");
-        }
-        else {
-          setResponseMessage(data.error || "An error occurred.");
-          setResponseMessage(data.status);
-        }
-      } catch (error) {
-        setResponseMessage("Failed to connect to the server.");
-        console.error("Error adding user:", error);
+        setEmail(''); // Clear the input on success
+      } else {
+        setAlert({
+          message: data.error || "An error occurred.",
+          type: 'error',
+          show: true
+        });
       }
-    };
+    } catch (error) {
+      setAlert({
+        message: "Failed to connect to the server.",
+        type: 'error',
+        show: true
+      });
+      console.error("Error adding user:", error);
+    }
+  };
 
   const handleRoleUpgradeRequest = async (requestedRole: string) => {
     if (!session?.user?.name || !session?.user?.email || !userRole) {
@@ -286,6 +303,17 @@ export default function ProtectedPage() {
         <h4 className="scroll-m-20 text-2xl ml-16 font-semibold tracking-tight">
           Add User to access database
         </h4>
+
+        {alert.show && (
+        <Alert 
+          variant={alert.type === 'error' ? 'destructive' : 'default'} 
+          className="mb-4"
+        >
+          <AlertDescription>
+            {alert.message}
+          </AlertDescription>
+        </Alert>
+      )}
       </div>
       <div className="ml-16 mt-4 flex items-center space-x-4">
         <Input type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} className="w-64" />
