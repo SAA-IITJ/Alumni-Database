@@ -3,7 +3,7 @@
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
-import { columns } from "./columns"
+import { alumdata, columns } from "./columns"
 import { DataTable } from "./data-table"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Moon, Sun } from "lucide-react"
@@ -45,7 +45,7 @@ export default function ProtectedPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
 
-  const [data, setData] = useState<string[]>([]);
+  const [data, setData] = useState<alumdata[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [userRole, setUserRole] = useState<string | null>(null);
 
@@ -108,8 +108,6 @@ export default function ProtectedPage() {
           });
 
           // Fetch alumni data
-          const alumniData = await getData();
-          setData(alumniData);
         } catch (err: unknown) {
           console.log(err);
         } finally {

@@ -28,7 +28,11 @@ export type alumdata = {
 }
 
 
-async function updateStatus( email, updated_status, contactedby ) {
+async function updateStatus(
+  email: string | null,
+  updated_status: string | null,
+  contactedby: string | null
+) {
   console.log(email);
   try {
     
@@ -90,7 +94,7 @@ const ActionCell = ({ row }: ActionCellProps) => {
             updateStatus(
               alum.email,
               "in contact",
-              session.user.name
+              session?.user?.name
             )
           }}
         >
