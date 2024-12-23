@@ -155,7 +155,7 @@ export default function ProtectedPage() {
         }),
       });
 
-      const data = await response.json();
+      await response.json();
 
       if (response.ok) {
         // Refresh user role after successful request

@@ -4,6 +4,7 @@ import { ColumnDef } from "@tanstack/react-table"
 import { MoreHorizontal } from "lucide-react"
 import { useSession } from "next-auth/react";
 import { Button } from "@/components/ui/button"
+import { Row } from "@tanstack/react-table";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -63,56 +64,71 @@ async function updateStatus( email, updated_status, contactedby ) {
   }
 }
 
+interface ActionCellProps {
+  row: Row<alumdata>;
+}
 
+// First, create a separate ActionCell component at the top of your file
+const ActionCell = ({ row }: ActionCellProps) => {
+  const { data: session } = useSession();
+  const alum = row.original;
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" className="h-8 w-8 p-0">
+          <span className="sr-only">Open menu</span>
+          <MoreHorizontal className="h-4 w-4" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        <DropdownMenuLabel>Status</DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem
+          onClick={() => {
+            console.log(alum.email);
+            updateStatus(
+              alum.email,
+              "in contact",
+              session.user.name
+            )
+          }}
+        >
+          contacted
+        </DropdownMenuItem>
+        
+        <DropdownMenuItem
+          onClick={() =>
+            updateStatus(
+              alum.email,
+              "ghosted",
+              session.user.name
+            )
+          }
+        >
+          ghosted
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          onClick={() =>
+            updateStatus(
+              alum.email,
+              "not contacted",
+              session.user.name
+            )
+          }
+        >
+           not contacted
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+};
+
+// Then modify your actions column definition to use this component
 export const columns: ColumnDef<alumdata>[] = [
   {
     id: "actions",
-    cell: ({ row }) => {
-      const alum = row.original
-      const { data: session } = useSession(); 
-          return (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="h-8 w-8 p-0">
-                  <span className="sr-only">Open menu</span>
-                  <MoreHorizontal className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuLabel>Status</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem
-                  onClick={() =>{
-                    console.log(alum.email);
-                    updateStatus(
-                      alum.email,
-                       "in contact",
-                       session.user.name, // Replace with the actual user's name if available
-                    )}}
-                >
-                  contacted
-                </DropdownMenuItem>
-                
-                <DropdownMenuItem
-                onClick={() =>
-                  updateStatus(
-                  alum.email,
-                    "ghosted",
-                     session.user.name, // Replace with the actual user's name if available
-                  )}
-                  >ghosted</DropdownMenuItem>
-                <DropdownMenuItem
-                onClick={() =>
-                  updateStatus(
-                    alum.email,
-                     "not contacted",
-                     session.user.name, // Replace with the actual user's name if available
-                  )}
-                  >not contacted</DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          )
-    },
+    cell: ({ row }) => <ActionCell row={row} />
   },
   {
     accessorKey: "Name",
@@ -162,5 +178,4 @@ export const columns: ColumnDef<alumdata>[] = [
       <div className="text-left font-medium">Phone Number</div>
     ),
   }
-
-]
+];
