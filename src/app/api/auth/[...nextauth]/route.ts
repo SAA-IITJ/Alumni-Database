@@ -1,21 +1,35 @@
 // api/auth/[...nextauth]/route.ts
-import NextAuth from "next-auth";
+import NextAuth, { NextAuthOptions, Session, Account, User } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 import { userdb } from "@/lib/userdb";
+import { JWT } from "next-auth/jwt";
 
+interface SignInParams {
+  user: User;
+  account: Account | null;
+}
+
+interface SessionParams {
+  session: Session;
+  token: JWT;
+}
+
+interface RedirectParams {
+  baseUrl: string;
+}
 
 const isAllowedEmail = async (email: string): Promise<boolean> => {
   try {
-    const db = await userdb(); // Ensure `userdb()` returns a valid database connection
+    const db = await userdb();
     const existingUser = await db.collection("users").findOne({ email });
-    return existingUser !== null; // Return true if the user exists, otherwise false
+    return existingUser !== null;
   } catch (error) {
     console.error("Error checking allowed email:", error);
-    return false; // Handle errors gracefully
+    return false;
   }
 };
 
-export const authOptions = {
+export const authOptions: NextAuthOptions = {
   providers: [
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID!,
@@ -24,24 +38,24 @@ export const authOptions = {
   ],
   secret: process.env.NEXTAUTH_SECRET!,
   callbacks: {
-    async signIn({ user, account }: string) {
-      // Only allow sign in if email matches allowed patterns
+    async signIn({ user, account }: SignInParams) {
       if (account?.provider === "google" && user?.email) {
         return isAllowedEmail(user.email);
       }
       return false;
     },
-    async session({ session, token }: string) {
-      session.user.id = token.sub;
+    async session({ session, token }: SessionParams) {
+      if (session.user) {
+        session.user.id = token.sub;
+      }
       return session;
     },
-    async redirect({ baseUrl }: string) {
-      // Customize redirect behavior if needed
+    async redirect({ baseUrl }: RedirectParams) {
       return baseUrl;
     },
   },
   pages: {
-    error: "/error", // Custom error page for unauthorized access
+    error: "/error",
   },
 };
 
