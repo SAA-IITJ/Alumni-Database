@@ -4,21 +4,16 @@ import { ColumnDef } from "@tanstack/react-table"
 import { Button } from "@/components/ui/button"
 
 // Updated type to match the data structure
-export type alumdata = {
+export type userData = {
   id: string
   name: string
   email: string
   currentRole: string
   requestedRole: string
-  status?: "in contact" | "ghosted" | "never contacted" | "failed"
-  programme?: string
-  passing_year?: string
-  branch?: string
-  contactedBy?: string
 }
 
 // Function to handle the grant request
-const handleGrantRequest = async (userData: alumdata) => {
+const handleGrantRequest = async (userData: userData) => {
   try {
     const response = await fetch('/api/admin', {
       method: 'PUT',
@@ -50,7 +45,7 @@ const handleGrantRequest = async (userData: alumdata) => {
   }
 };
 
-export const columns: ColumnDef<alumdata>[] = [
+export const columns: ColumnDef<userData>[] = [
   {
     id: "actions",
     cell: ({ row }) => {

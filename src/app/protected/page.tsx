@@ -20,7 +20,14 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { signOut } from "next-auth/react";
 
-async function getData(filters: string, role: string): Promise<alumdata[]> {
+interface FilterParams {
+  filterName: string;
+  filterBranch: string;
+  filterProgramme: string;
+  filterYear: string;
+}
+
+async function getData(filters: FilterParams, role: string): Promise<alumdata[]> {
   try {
     const queryParams = new URLSearchParams({
       filterName: filters.filterName || '',

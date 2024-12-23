@@ -3,7 +3,7 @@
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
-import { alumdata, columns } from "./columns"
+import { userData, columns } from "./columns"
 import { DataTable } from "./data-table"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Moon, Sun } from "lucide-react"
@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { signOut } from "next-auth/react";
 
-async function getData(): Promise<string[]> {
+async function getData(): Promise<userData[]> {
   try {
     const response = await fetch('/api/admin', {
       method: 'GET',
@@ -45,7 +45,7 @@ export default function ProtectedPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
 
-  const [data, setData] = useState<alumdata[]>([]);
+  const [data, setData] = useState<userData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [userRole, setUserRole] = useState<string | null>(null);
 
@@ -108,6 +108,8 @@ export default function ProtectedPage() {
           });
 
           // Fetch alumni data
+          const userData = await getData();
+          setData(userData);
         } catch (err: unknown) {
           console.log(err);
         } finally {

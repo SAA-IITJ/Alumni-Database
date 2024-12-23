@@ -29,9 +29,9 @@ export type alumdata = {
 
 
 async function updateStatus(
-  email: string | null,
-  updated_status: string | null,
-  contactedby: string | null
+  email: string | undefined | null,
+  updated_status: string | undefined | null,
+  contactedby: string | undefined | null
 ) {
   console.log(email);
   try {
@@ -106,7 +106,7 @@ const ActionCell = ({ row }: ActionCellProps) => {
             updateStatus(
               alum.email,
               "ghosted",
-              session.user.name
+              session?.user?.name
             )
           }
         >
@@ -117,7 +117,7 @@ const ActionCell = ({ row }: ActionCellProps) => {
             updateStatus(
               alum.email,
               "not contacted",
-              session.user.name
+              session?.user?.name
             )
           }
         >
