@@ -9,6 +9,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Moon, Sun } from "lucide-react"
 import { useTheme } from "next-themes"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -124,6 +125,38 @@ export default function ProtectedPage() {
     fetchDataAndAddUser();
   }, [status, session]);
 
+    const [email, setEmail] = useState("");
+    const [responseMessage, setResponseMessage] = useState("");
+  
+    const handleAddUser = async () => {
+      if (!email.trim()) {
+        setResponseMessage("Please enter a valid email.");
+        return;
+      }
+  
+      try {
+        const response = await fetch("/api/user", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ email }),
+        });
+  
+        const data = await response.json();
+        if(data.status === 201){
+          setResponseMessage(data.message || "User added successfully.");
+        }
+        else {
+          setResponseMessage(data.error || "An error occurred.");
+          setResponseMessage(data.status);
+        }
+      } catch (error) {
+        setResponseMessage("Failed to connect to the server.");
+        console.error("Error adding user:", error);
+      }
+    };
+
   const handleRoleUpgradeRequest = async (requestedRole: string) => {
     if (!session?.user?.name || !session?.user?.email || !userRole) {
       setMessage("Missing user information");
@@ -184,7 +217,7 @@ export default function ProtectedPage() {
           <DropdownMenu>
             <DropdownMenuTrigger>
               <Avatar className="ml-auto">
-                <AvatarImage src="https://github.com/shadcn.png" />
+                <AvatarImage src={session.user.image} />
                 <AvatarFallback>CN</AvatarFallback>
               </Avatar>
             </DropdownMenuTrigger>
@@ -248,6 +281,15 @@ export default function ProtectedPage() {
       </div>
       <div className="container mx-auto py-10">
         <DataTable columns={columns} data={data} />
+      </div>
+      <div>
+        <h4 className="scroll-m-20 text-2xl ml-16 font-semibold tracking-tight">
+          Add User to access database
+        </h4>
+      </div>
+      <div className="ml-16 mt-4 flex items-center space-x-4">
+        <Input type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} className="w-64" />
+        <Button variant="default" onClick={handleAddUser}>Add</Button>
       </div>
     </div>
   );
