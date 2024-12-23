@@ -45,7 +45,7 @@ export default function ProtectedPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
 
-  const [data, setData] = useState<alumdata[]>([]);
+  const [data, setData] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [userRole, setUserRole] = useState<string | null>(null);
 
