@@ -1,5 +1,21 @@
+// api/auth/[...nextauth]/route.ts
 import NextAuth from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
+
+// Define allowed email domains or specific emails
+const allowedDomains = ["iitj.ac.in"]; // Add your allowed domains
+const allowedEmails = [
+  // Add specific email addresses if needed
+  "B23EE1082@iitj.ac.in",
+];
+
+// Helper function to check if email is allowed
+const isAllowedEmail = (email: string): boolean => {
+  if (allowedEmails.includes(email)) return true;
+  
+  const domain = email.split("@")[1];
+  return allowedDomains.includes(domain);
+};
 
 export const authOptions = {
   providers: [
@@ -10,10 +26,24 @@ export const authOptions = {
   ],
   secret: process.env.NEXTAUTH_SECRET!,
   callbacks: {
+    async signIn({ user, account }: any) {
+      // Only allow sign in if email matches allowed patterns
+      if (account?.provider === "google" && user?.email) {
+        return isAllowedEmail(user.email);
+      }
+      return false;
+    },
     async session({ session, token }: any) {
-      session.user.id = token.sub; // Attach Google user ID to session
+      session.user.id = token.sub;
       return session;
     },
+    async redirect({ url, baseUrl }: any) {
+      // Customize redirect behavior if needed
+      return baseUrl;
+    },
+  },
+  pages: {
+    error: "/error", // Custom error page for unauthorized access
   },
 };
 
