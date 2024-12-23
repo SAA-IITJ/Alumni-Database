@@ -2,16 +2,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { userdb } from "@/lib/userdb";
 
-export async function POST(request: NextRequest) {
+export async function PUT(request: NextRequest) {
   try {
-    // Connect to the 'database_app' database
+    
     const db = await userdb();
 
-    // Parse the request body
+    
     const body = await request.json();
     const { name, email, role } = body;
 
-    // Validation
     if (!name || !email) {
       return NextResponse.json(
         { error: "Name and email are required" },
@@ -19,7 +18,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check if a user with the given name already exists
     const existingUser = await db.collection("users").findOne({ name });
     if (existingUser) {
       return NextResponse.json(
@@ -28,20 +26,30 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Insert a new user into the 'users' collection
-    const result = await db.collection("users").insertOne({ name, email, role });
+ 
+    const result = await db.collection("users").updateOne(
+      { email },
+      { $set: { name, role } },
+      { upsert: false } 
+    );
 
-    // Return success response
+    if (result.matchedCount === 0) {
+      return NextResponse.json(
+        { error: "User with the provided email does not exist" },
+        { status: 404 }
+      );
+    }
+
     return NextResponse.json(
       {
-        message: "User created successfully",
-        user: { id: result.insertedId, name, email, role },
+        message: "User updated successfully",
+        user: { name, email, role },
       },
-      { status: 201 }
+      { status: 200 }
     );
 
   } catch (error) {
-    console.error("User creation error:", error);
+    console.error("User update error:", error);
 
     // Handle specific errors
     return NextResponse.json(
@@ -53,6 +61,7 @@ export async function POST(request: NextRequest) {
     );
   }
 }
+
 
 export async function GET(request: NextRequest) {
   try {

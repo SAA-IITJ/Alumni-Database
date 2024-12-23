@@ -104,7 +104,7 @@ export default function ProtectedPage() {
           // First, add/update user in database
           const { name, email } = session.user;
           await fetch("/api/user", {
-            method: "POST",
+            method: "PUT",
             headers: {
               "Content-Type": "application/json",
             },

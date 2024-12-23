@@ -132,7 +132,7 @@ export default function ProtectedPage() {
 
     try {
       const response = await fetch("/api/admin", {
-        method: "POST",
+        method: "PUT",
         headers: {
           "Content-Type": "application/json",
         },
