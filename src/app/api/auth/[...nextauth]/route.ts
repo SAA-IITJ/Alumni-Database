@@ -1,20 +1,18 @@
 // api/auth/[...nextauth]/route.ts
 import NextAuth from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
+import { userdb } from "@/lib/userdb";
 
-// Define allowed email domains or specific emails
-const allowedDomains = ["iitj.ac.in"]; // Add your allowed domains
-const allowedEmails = [
-  // Add specific email addresses if needed
-  "B23EE1082@iitj.ac.in",
-];
 
-// Helper function to check if email is allowed
-const isAllowedEmail = (email: string): boolean => {
-  if (allowedEmails.includes(email)) return true;
-  
-  const domain = email.split("@")[1];
-  return allowedDomains.includes(domain);
+const isAllowedEmail = async (email: string): Promise<boolean> => {
+  try {
+    const db = await userdb(); // Ensure `userdb()` returns a valid database connection
+    const existingUser = await db.collection("users").findOne({ email });
+    return existingUser !== null; // Return true if the user exists, otherwise false
+  } catch (error) {
+    console.error("Error checking allowed email:", error);
+    return false; // Handle errors gracefully
+  }
 };
 
 export const authOptions = {
