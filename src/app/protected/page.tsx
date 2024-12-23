@@ -20,7 +20,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { signOut } from "next-auth/react";
 
-async function getData(filters: any, role: string): Promise<alumdata[]> {
+async function getData(filters: string, role: string): Promise<alumdata[]> {
   try {
     const queryParams = new URLSearchParams({
       filterName: filters.filterName || '',
@@ -196,7 +196,7 @@ export default function ProtectedPage() {
         <DropdownMenu>
           <DropdownMenuTrigger>
             <Avatar className="ml-auto">
-              <AvatarImage src="https://github.com/shadcn.png" />
+              <AvatarImage src={session.user.image} />
               <AvatarFallback>CN</AvatarFallback>
             </Avatar>
           </DropdownMenuTrigger>

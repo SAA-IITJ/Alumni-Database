@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { signOut } from "next-auth/react";
 
-async function getData(): Promise<any[]> {
+async function getData(): Promise<string[]> {
   try {
     const response = await fetch('/api/admin', {
       method: 'GET',
@@ -45,7 +45,6 @@ export default function ProtectedPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
 
-  const [message, setMessage] = useState<string | null>(null);
   const [data, setData] = useState<alumdata[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [userRole, setUserRole] = useState<string | null>(null);
@@ -112,11 +111,6 @@ export default function ProtectedPage() {
           const alumniData = await getData();
           setData(alumniData);
         } catch (err: unknown) {
-          if (err instanceof Error) {
-            setMessage(`Error: ${err.message}`);
-          } else {
-            setMessage("An unknown error occurred");
-          }
         } finally {
           setIsLoading(false);
         }
@@ -176,7 +170,6 @@ export default function ProtectedPage() {
 
   const handleRoleUpgradeRequest = async (requestedRole: string) => {
     if (!session?.user?.name || !session?.user?.email || !userRole) {
-      setMessage("Missing user information");
       return;
     }
 
@@ -195,15 +188,8 @@ export default function ProtectedPage() {
       });
 
       const result = await response.json();
-
-      if (response.ok) {
-        setMessage(`Role upgrade request to ${requestedRole} submitted successfully`);
-      } else {
-        setMessage(result.error || "Failed to submit role upgrade request");
-      }
     } catch (error) {
       console.error("Error submitting role upgrade request:", error);
-      setMessage("Error submitting role upgrade request");
     }
   };
 
@@ -303,22 +289,21 @@ export default function ProtectedPage() {
         <h4 className="scroll-m-20 text-2xl ml-16 font-semibold tracking-tight">
           Add User to access database
         </h4>
-
-        {alert.show && (
-        <Alert 
-          variant={alert.type === 'error' ? 'destructive' : 'default'} 
-          className="mb-4"
-        >
-          <AlertDescription>
-            {alert.message}
-          </AlertDescription>
-        </Alert>
-      )}
       </div>
       <div className="ml-16 mt-4 flex items-center space-x-4">
         <Input type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} className="w-64" />
         <Button variant="default" onClick={handleAddUser}>Add</Button>
       </div>
+      {alert.show && (
+          <Alert 
+            variant={alert.type === 'error' ? 'destructive' : 'default'} 
+            className="mb-4 mt-4"
+          >
+            <AlertDescription>
+              {alert.message}
+            </AlertDescription>
+          </Alert>
+        )}
     </div>
   );
 }

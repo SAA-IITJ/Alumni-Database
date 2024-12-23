@@ -28,7 +28,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Insert a new user into the 'users' collection
-    const result = await db.collection("raiseRoleUpgrade").insertOne({ name, email, currentRole , requestedRole});
+    await db.collection("raiseRoleUpgrade").insertOne({ name, email, currentRole , requestedRole});
 
     // Return success response
     return NextResponse.json(
@@ -53,7 +53,7 @@ export async function POST(request: NextRequest) {
   }
 }
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     // Connect to the database
     const db = await userdb();

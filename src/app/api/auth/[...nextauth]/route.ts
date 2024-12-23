@@ -24,18 +24,18 @@ export const authOptions = {
   ],
   secret: process.env.NEXTAUTH_SECRET!,
   callbacks: {
-    async signIn({ user, account }: any) {
+    async signIn({ user, account }: string) {
       // Only allow sign in if email matches allowed patterns
       if (account?.provider === "google" && user?.email) {
         return isAllowedEmail(user.email);
       }
       return false;
     },
-    async session({ session, token }: any) {
+    async session({ session, token }: string) {
       session.user.id = token.sub;
       return session;
     },
-    async redirect({ url, baseUrl }: any) {
+    async redirect({ baseUrl }: string) {
       // Customize redirect behavior if needed
       return baseUrl;
     },
