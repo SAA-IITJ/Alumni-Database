@@ -6,7 +6,7 @@ import { useState, useEffect } from "react";
 import { alumdata, columns } from "./columns"
 import { DataTable } from "./data-table"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Moon, MoonIcon, Sun } from "lucide-react"
+import { Moon, Sun } from "lucide-react"
 import { useTheme } from "next-themes"
 import { Button } from "@/components/ui/button"
 import {
@@ -18,25 +18,25 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { signOut } from "next-auth/react";
+
 async function getData(): Promise<any[]> {
-    try {
-      const response = await fetch('/api/admin', {
-        method: 'GET',
-        headers: { 'Content-Type': 'application/json' },
-      });
-      console.log(response);
-  
-      if (!response.ok) {
-        throw new Error('Failed to fetch data');
-      }
-  
-      const result = await response.json();
-      return result.data; // Extract the 'data' field from the response
-    } catch (error) {
-      console.error('Error fetching data:', error);
-      return [];
+  try {
+    const response = await fetch('/api/admin', {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' },
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch data');
     }
+
+    const result = await response.json();
+    return result.data;
+  } catch (error) {
+    console.error('Error fetching data:', error);
+    return [];
   }
+}
 
 export default function ProtectedPage() {
   const { setTheme } = useTheme()
@@ -56,29 +56,36 @@ export default function ProtectedPage() {
       }
       const userData = await response.json();
       setUserRole(userData.user.role);
+      return userData.user.role;
     } catch (error) {
       console.error('Error fetching user role:', error);
       setUserRole(null);
+      return null;
     }
   };
 
-      // Effect for authentication check and fetching user role
-      useEffect(() => {
-        if (status === "unauthenticated") {
-          router.push("/");
-        } else if (status === "authenticated" && session?.user?.email) {
-          fetchUserRole(session.user.email);
-        }
-      }, [status, router, session]);
-
-  // Redirect unauthenticated users
+  // Check authentication and admin role
   useEffect(() => {
+    if (status === "loading") return;
+
     if (status === "unauthenticated") {
       router.push("/");
+      return;
     }
-  }, [status, router]);
 
-  // Fetch alumni data and add user to database
+    const checkUserRole = async () => {
+      if (session?.user?.email) {
+        const role = await fetchUserRole(session.user.email);
+        if (role !== "admin") {
+          router.push("/protected");
+        }
+      }
+    };
+
+    checkUserRole();
+  }, [status, session, router]);
+
+  // Fetch data and add user
   useEffect(() => {
     const fetchDataAndAddUser = async () => {
       if (status === "authenticated" && session?.user) {
@@ -87,7 +94,7 @@ export default function ProtectedPage() {
 
         try {
           // Add user to database
-          const userResponse = await fetch("/api/user", {
+          await fetch("/api/user", {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
@@ -99,27 +106,17 @@ export default function ProtectedPage() {
             }),
           });
 
-          if (userResponse.ok) {
-            const result = await userResponse.json();
-            setMessage(`User data added: ${result.name}`);
-          } else {
-            const error = await userResponse.json();
-            setMessage(`Error: ${error.error}`);
-          }
-
           // Fetch alumni data
-          setIsLoading(true);
           const alumniData = await getData();
           setData(alumniData);
-          setIsLoading(false);
-
         } catch (err: unknown) {
-          setIsLoading(false);
           if (err instanceof Error) {
             setMessage(`Error: ${err.message}`);
           } else {
             setMessage("An unknown error occurred");
           }
+        } finally {
+          setIsLoading(false);
         }
       }
     };
@@ -127,76 +124,81 @@ export default function ProtectedPage() {
     fetchDataAndAddUser();
   }, [status, session]);
 
-  // Loading state
+  const handleRoleUpgradeRequest = async (requestedRole: string) => {
+    if (!session?.user?.name || !session?.user?.email || !userRole) {
+      setMessage("Missing user information");
+      return;
+    }
+
+    try {
+      const response = await fetch("/api/admin", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name: session.user.name,
+          email: session.user.email,
+          currentRole: userRole,
+          requestedRole: requestedRole
+        }),
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+        setMessage(`Role upgrade request to ${requestedRole} submitted successfully`);
+      } else {
+        setMessage(result.error || "Failed to submit role upgrade request");
+      }
+    } catch (error) {
+      console.error("Error submitting role upgrade request:", error);
+      setMessage("Error submitting role upgrade request");
+    }
+  };
+
   if (status === "loading" || isLoading) {
-    return <p>Loading...</p>;
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <p>Loading...</p>
+      </div>
+    );
   }
 
-    // Function to handle role upgrade request
-    const handleRoleUpgradeRequest = async (requestedRole: string) => {
-      if (!session?.user?.name || !session?.user?.email || !userRole) {
-        setMessage("Missing user information");
-        return;
-      }
-  
-      try {
-        const response = await fetch("/api/admin", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            name: session.user.name,
-            email: session.user.email,
-            currentRole: userRole,
-            requestedRole: requestedRole
-          }),
-        });
-  
-        const data = await response.json();
-  
-        if (response.ok) {
-          setMessage(`Role upgrade request to ${requestedRole} submitted successfully`);
-        } else {
-          setMessage(data.error || "Failed to submit role upgrade request");
-        }
-      } catch (error) {
-        console.error("Error submitting role upgrade request:", error);
-        setMessage("Error submitting role upgrade request");
-      }
-    };
-
-
+  if (status !== "authenticated" || userRole !== "admin") {
+    return null;
+  }
 
   return (
     <div>
       <div className="flex flex-col items-start md:flex-row md:items-center md:justify-between">
         <div>
           <h2 className="scroll-m-20 pb-2 ml-16 text-3xl font-semibold tracking-tight first:mt-8">
-          The Alumni Database
+            The Alumni Database
           </h2>
           <h3 className="scroll-m-20 border-b-2 text-2xl ml-16 font-semibold tracking-tight">
             Welcome {session.user?.name}!
           </h3>
         </div>
         <div className="flex flex-col items-start md:flex-row md:items-center md:justify-between mr-32 mt-8">
-        <DropdownMenu>
-          <DropdownMenuTrigger>
-            <Avatar className="ml-auto">
-              <AvatarImage src="https://github.com/shadcn.png" />
-              <AvatarFallback>CN</AvatarFallback>
-            </Avatar>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent>
-            <DropdownMenuLabel>My Account</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => router.push('/protected')}>
+          <DropdownMenu>
+            <DropdownMenuTrigger>
+              <Avatar className="ml-auto">
+                <AvatarImage src="https://github.com/shadcn.png" />
+                <AvatarFallback>CN</AvatarFallback>
+              </Avatar>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+              <DropdownMenuLabel>My Account</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => router.push('/protected')}>
                 Alumni Database
-            </DropdownMenuItem>
-            <DropdownMenuItem>
+              </DropdownMenuItem>
               <DropdownMenu>
-                <DropdownMenuTrigger>
-                  Change Role
+                <DropdownMenuTrigger asChild>
+                  <DropdownMenuItem className="cursor-pointer">
+                    Change Role
+                  </DropdownMenuItem>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent>
                   <DropdownMenuLabel>Current Role: {userRole}</DropdownMenuLabel>
@@ -209,18 +211,16 @@ export default function ProtectedPage() {
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
-            </DropdownMenuItem>
               {userRole === 'admin' && (
-              <DropdownMenuItem onClick={() => router.push('/Profile')}>
-                Profile
-              </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => router.push('/Profile')}>
+                  Profile
+                </DropdownMenuItem>
               )}
-            <DropdownMenuItem onClick={() => signOut()}>
-              Logout
-            </DropdownMenuItem>
-          </DropdownMenuContent>
+              <DropdownMenuItem onClick={() => signOut()}>
+                Logout
+              </DropdownMenuItem>
+            </DropdownMenuContent>
           </DropdownMenu>
-
 
           <div className="ml-8">
             <DropdownMenu>
@@ -244,7 +244,6 @@ export default function ProtectedPage() {
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
-
         </div>
       </div>
       <div className="container mx-auto py-10">

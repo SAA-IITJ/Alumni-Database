@@ -116,49 +116,49 @@ export const columns: ColumnDef<alumdata>[] = [
   },
   {
     accessorKey: "Name",
-    header: (props) => (
+    header: (_props) => (
       <div className="text-left font-medium">Name</div>
     ),
   },
   {
     accessorKey: "year_of_Graduation",
-    header: (props) => (
+    header: (_props) => (
       <div className="text-left font-medium">Passing Year</div>
     ), 
   },
   {
     accessorKey: "Degree",
-    header: (props) => (
+    header: (_props) => (
       <div className="text-left font-medium">Programme</div>
     ),
   },
   {
     accessorKey: "Branch",
-    header: (props) => (
+    header: (_props) => (
       <div className="text-left font-medium">Branch</div>
     ),
   },
   {
     accessorKey: "status",
-    header: (props) => (
+    header: (_props) => (
       <div className="text-left font-medium">Status</div>
     ),
   },
   {
     accessorKey:"contacted_by",
-    header: (props) => (
+    header: (_props) => (
       <div className="text-left font-medium">Contacted by</div>
     ),
   },
   {
     accessorKey:"email",
-    header: (props) => (
+    header: (_props) => (
       <div className="text-left font-medium">E mail</div>
     ),
   },
   {
     accessorKey:"Phone",
-    header: (props) => (
+    header: (_props) => (
       <div className="text-left font-medium">Phone Number</div>
     ),
   }

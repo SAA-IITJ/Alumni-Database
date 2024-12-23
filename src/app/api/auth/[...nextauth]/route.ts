@@ -1,6 +1,5 @@
 import NextAuth from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
-import { Session } from "node:inspector/promises";
 
 export const authOptions = {
   providers: [

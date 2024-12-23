@@ -6,7 +6,7 @@ import { useState, useEffect } from "react";
 import { alumdata, columns } from "./columns"
 import { DataTable } from "./data-table"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Moon, MoonIcon, Sun } from "lucide-react"
+import { Moon, Sun } from "lucide-react"
 import { useTheme } from "next-themes"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"

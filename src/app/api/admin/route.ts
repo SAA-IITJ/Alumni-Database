@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { Db, ObjectId } from 'mongodb'; 
 import { userdb } from '@/lib/userdb';
-import { log } from "console";
 
 export async function POST(request: NextRequest) {
   try {
