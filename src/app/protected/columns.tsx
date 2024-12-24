@@ -24,9 +24,8 @@ export type alumdata = {
   passing_year: string
   branch: string
   contactedBy: string
-  email : string
+  email: string
 }
-
 
 async function updateStatus(
   email: string | undefined | null,
@@ -35,8 +34,6 @@ async function updateStatus(
 ) {
   console.log(email);
   try {
-    
-    // Make the PUT request to the API
     const response = await fetch('/api/alumni', {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
@@ -49,22 +46,19 @@ async function updateStatus(
 
     console.log('Response:', response);
 
-    // Check if the response is not OK
     if (!response.ok) {
       const errorResponse = await response.json();
       throw new Error(errorResponse.error || 'Failed to update alumni data');
     }
 
-    // Parse the JSON response
     const result = await response.json();
     console.log('Result:', result);
 
     window.location.reload();
     return result.message;
-      // Return the success message
   } catch (error) {
     console.error('Error updating alumni data:', error);
-    return null; // Return `null` to indicate failure
+    return null;
   }
 }
 
@@ -72,7 +66,6 @@ interface ActionCellProps {
   row: Row<alumdata>;
 }
 
-// First, create a separate ActionCell component at the top of your file
 const ActionCell = ({ row }: ActionCellProps) => {
   const { data: session } = useSession();
   const alum = row.original;
@@ -128,8 +121,21 @@ const ActionCell = ({ row }: ActionCellProps) => {
   );
 };
 
-// Then modify your actions column definition to use this component
 export const columns: ColumnDef<alumdata>[] = [
+  {
+    id: "serialNumber",
+    header: () => <div className="text-left font-medium">S.No</div>,
+    cell: ({ table, row }) => {
+      // Get the current page index
+      const pageIndex = table.getState().pagination.pageIndex;
+      // Get the page size
+      const pageSize = table.getState().pagination.pageSize;
+      // Get the index of the row within the current page's filtered/sorted data
+      const rowIndex = table.getFilteredRowModel().rows.findIndex(r => r.id === row.id);
+      // Calculate the serial number
+      return <div>{rowIndex + 1}</div>;
+    },
+  },
   {
     id: "actions",
     cell: ({ row }) => <ActionCell row={row} />

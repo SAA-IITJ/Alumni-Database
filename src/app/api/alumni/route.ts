@@ -5,7 +5,7 @@ export async function GET(request: NextRequest) {
   try {
     // Connect to the database
     const db = await userdb();
-
+    
     // Parse the request body
     const url = new URL(request.url);
     const filterName = url.searchParams.get('filterName');
@@ -13,31 +13,56 @@ export async function GET(request: NextRequest) {
     const filterProgramme = url.searchParams.get('filterProgramme');
     const filterYear = url.searchParams.get('filterYear');
     const role = url.searchParams.get('role');
-
-    // Construct the query based on filters
-    const query: Record<string, string | number> = {};
-    if (filterName) query.Name = filterName;
-    if (filterBranch) query.Branch = filterBranch;
-    if (filterProgramme) query.Degree = filterProgramme;
-
-    // Convert the filterYear to double if it's provided
-    if (filterYear) query.year_of_Graduation = parseFloat(filterYear);
-
+    
+    // Construct the query based on filters using regex for case-insensitive and partial matching
+    const query: Record<string, any> = {};
+    
+    if (filterName) {
+      query.Name = {
+        $regex: filterName,
+        $options: 'i'  // 'i' flag makes it case-insensitive
+      };
+    }
+    
+    if (filterBranch) {
+      query.Branch = {
+        $regex: filterBranch,
+        $options: 'i'
+      };
+    }
+    
+    if (filterProgramme) {
+      query.Degree = {
+        $regex: filterProgramme,
+        $options: 'i'
+      };
+    }
+    
+    // Year should still be an exact match since it's a number
+    if (filterYear) {
+      query.year_of_Graduation = parseFloat(filterYear);
+    }
+    
+    console.log('Constructed query:', query);
+    
     // Determine the projection based on role
-   
-    console.log(query);
-    const projection: Record<string, string | number> = {};
+    const projection: Record<string, number> = {};
     if (role === "user") {
       projection.Phone = 0; // Exclude Phone for 'user' role
     }
-
-    const results = await db.collection('AlumniData').find(query, {  projection  }).toArray();
-
-    // Return the filtered results in JSON format
+    
+    const results = await db.collection('AlumniData')
+      .find(query, { projection })
+      .toArray();
+    
     return NextResponse.json({ data: results }, { status: 200 });
+    
   } catch (error) {
     console.error('Error fetching data:', error);
-    return NextResponse.json({ error: 'Failed to fetch data' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Failed to fetch data' }, 
+      { status: 500 }
+    );
   }
 }
 
