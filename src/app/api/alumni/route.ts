@@ -71,7 +71,7 @@ export async function PUT(request: NextRequest) {
     // Parse the request body
     const body = await request.json();
 
-    const { email, updated_status, contactedby } = body;
+    const { email, updated_status, contactedby, role } = body;
 
     // Validate input
     if (!email || !updated_status || !contactedby) {
@@ -83,46 +83,63 @@ export async function PUT(request: NextRequest) {
     const AlumniData = db.collection('AlumniData');
 
     // Find the alumni record by email
-    const alumni = await AlumniData.findOne({ "email" :  email });
+    const alumni = await AlumniData.findOne({ email });
     if (!alumni) {
       return NextResponse.json({ error: 'Alumni not found' }, { status: 404 });
     }
 
-    // Update both `status` and `contactedby` regardless of the previous state
-    if(alumni.status == "not contacted"){
-    await AlumniData.updateOne(
-      { "email" : email },
-      {
-        $set: {
-          status: updated_status,
-          contacted_by : contactedby,
-        },
+    // Update logic
+    if (alumni.status === "not contacted") {
+      await AlumniData.updateOne(
+        { email },
+        {
+          $set: {
+            status: updated_status,
+            contacted_by: contactedby,
+          },
+        }
+      );
+    } else if (updated_status === "not contacted") {
+      if (contactedby === alumni.contacted_by || role === "admin") {
+        await AlumniData.updateOne(
+          { email },
+          {
+            $set: {
+              status: updated_status,
+              contacted_by: "",
+            },
+          }
+        );
+      } else {
+        return NextResponse.json({ error: 'Permission denied. Only admin or the person who contacted can update.' }, { status: 403 });
       }
-    );
-  }
-
-  else if(updated_status == "not contacted"){
-    await AlumniData.updateOne(
-      { "email" : email },
-      {
-        $set: {
-          status: updated_status,
-          contacted_by : "",
-        },
+    } else if (updated_status === "ghosted") {
+      if (contactedby === alumni.contacted_by || role === "admin") {
+        await AlumniData.updateOne(
+          { email },
+          {
+            $set: {
+              status: updated_status,
+            },
+          }
+        );
+      } else {
+        return NextResponse.json({ error: 'Permission denied. Only admin or the person who contacted can update.' }, { status: 403 });
       }
-    );
-  }
-  else{
-    await AlumniData.updateOne(
-      { "email" : email },
-      {
-        $set: {
-          status: updated_status,
-        },
+    }else if (updated_status === "in contact") {
+      if (contactedby === alumni.contacted_by || role === "admin") {
+        await AlumniData.updateOne(
+          { email },
+          {
+            $set: {
+              status: updated_status,
+            },
+          }
+        );
+      } else {
+        return NextResponse.json({ error: 'Permission denied. Only admin or the person who contacted can update.' }, { status: 403 });
       }
-    );
-  }
-
+    }
     // Respond with success
     return NextResponse.json({ message: 'Alumni data updated successfully' }, { status: 200 });
   } catch (error) {
@@ -130,5 +147,3 @@ export async function PUT(request: NextRequest) {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
-
-

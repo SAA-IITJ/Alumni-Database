@@ -5,6 +5,7 @@ import { MoreHorizontal } from "lucide-react"
 import { useSession } from "next-auth/react";
 import { Button } from "@/components/ui/button"
 import { Row } from "@tanstack/react-table";
+import { useState, useEffect } from "react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -14,8 +15,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 
-// This type is used to define the shape of our data.
-// You can use a Zod schema here if you want.
 export type alumdata = {
   id: string
   name: string
@@ -30,7 +29,8 @@ export type alumdata = {
 async function updateStatus(
   email: string | undefined | null,
   updated_status: string | undefined | null,
-  contactedby: string | undefined | null
+  contactedby: string | undefined | null,
+  role: string | undefined | null,
 ) {
   console.log(email);
   try {
@@ -41,6 +41,7 @@ async function updateStatus(
         email,
         updated_status,
         contactedby,
+        role
       }),
     });
 
@@ -58,9 +59,22 @@ async function updateStatus(
     return result.message;
   } catch (error) {
     console.error('Error updating alumni data:', error);
-    return null;
+    throw error; // Re-throw error to propagate it
   }
 }
+const fetchUserRole = async (email: string) => {
+  try {
+    const response = await fetch(`/api/user?email=${encodeURIComponent(email)}`);
+    if (!response.ok) {
+      throw new Error("Failed to fetch user data");
+    }
+    const userData = await response.json();
+    return userData.user.role;
+  } catch (error) {
+    console.error("Error fetching user role:", error);
+    return null;
+  }
+};
 
 interface ActionCellProps {
   row: Row<alumdata>;
@@ -68,9 +82,37 @@ interface ActionCellProps {
 
 const ActionCell = ({ row }: ActionCellProps) => {
   const { data: session } = useSession();
+  const [userRole, setUserRole] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const alum = row.original;
 
+  useEffect(() => {
+    const fetchRole = async () => {
+      if (session?.user?.email) {
+        const role = await fetchUserRole(session.user.email);
+        setUserRole(role);
+      }
+    };
+
+    fetchRole();
+  }, [session?.user?.email]);
+
+  const handleStatusUpdate = async (status: string) => {
+    try {
+      setErrorMessage(null); // Clear previous errors
+      await updateStatus(
+        alum.email,
+        status,
+        session?.user?.name,
+        userRole
+      );
+    } catch (error: any) {
+      setErrorMessage(error.message); // Set error message
+    }
+  };
+
   return (
+    <div>
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="h-8 w-8 p-0">
@@ -82,42 +124,28 @@ const ActionCell = ({ row }: ActionCellProps) => {
         <DropdownMenuLabel>Status</DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuItem
-          onClick={() => {
-            console.log(alum.email);
-            updateStatus(
-              alum.email,
-              "in contact",
-              session?.user?.name
-            )
-          }}
+          onClick={() => handleStatusUpdate("in contact")}
         >
           contacted
         </DropdownMenuItem>
         
         <DropdownMenuItem
-          onClick={() =>
-            updateStatus(
-              alum.email,
-              "ghosted",
-              session?.user?.name
-            )
-          }
+          onClick={() => handleStatusUpdate("ghosted")}
         >
           ghosted
         </DropdownMenuItem>
         <DropdownMenuItem
-          onClick={() =>
-            updateStatus(
-              alum.email,
-              "not contacted",
-              session?.user?.name
-            )
-          }
+          onClick={() => handleStatusUpdate("not contacted")}
         >
            not contacted
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
+
+    {errorMessage && (
+      <p className="text-red-500 text-sm mt-2">{errorMessage}</p>
+    )}
+  </div>
   );
 };
 
@@ -126,13 +154,9 @@ export const columns: ColumnDef<alumdata>[] = [
     id: "serialNumber",
     header: () => <div className="text-left font-medium">S.No</div>,
     cell: ({ table, row }) => {
-      // Get the current page index
       const pageIndex = table.getState().pagination.pageIndex;
-      // Get the page size
       const pageSize = table.getState().pagination.pageSize;
-      // Get the index of the row within the current page's filtered/sorted data
       const rowIndex = table.getFilteredRowModel().rows.findIndex(r => r.id === row.id);
-      // Calculate the serial number
       return <div>{rowIndex + 1}</div>;
     },
   },
