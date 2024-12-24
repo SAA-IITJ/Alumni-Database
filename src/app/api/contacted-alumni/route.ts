@@ -18,6 +18,7 @@ export async function GET(request: NextRequest) {
     const filterProgramme = url.searchParams.get('filterProgramme');
     const filterYear = url.searchParams.get('filterYear');
     const user = url.searchParams.get('name');
+    const role = url.searchParams.get('role');
     
     // Construct the query based on filters
     const query: Record<string, any> = {
@@ -54,10 +55,14 @@ export async function GET(request: NextRequest) {
     console.log('Constructed query:', query);
     
     // Fetch the filtered results
-    const results = await db.collection('AlumniData')
-      .find(query)
-      .toArray();
+    const projection: Record<string, number> = {};
+    if (role === "user") {
+      projection.Phone = 0; // Exclude Phone for 'user' role
+    }
     
+    const results = await db.collection('AlumniData')
+      .find(query, { projection })
+      .toArray()
     return NextResponse.json(
       { 
         data: results,

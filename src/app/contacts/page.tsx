@@ -28,14 +28,15 @@ interface FilterParams {
   name: string | null | undefined;
 }
 
-async function getData(filters: FilterParams): Promise<alumdata[]> {
+async function getData(filters: FilterParams ,role : string | null): Promise<alumdata[]> {
   try {
     const queryParams = new URLSearchParams({
       filterName: filters.filterName || '',
       filterBranch: filters.filterBranch || '',
       filterProgramme: filters.filterProgramme || '',
       filterYear: filters.filterYear || '',
-      name: filters.name || '',
+      name: filters.name || 'se',
+      role: role || "user",
     });
 
     const response = await fetch(`/api/contacted-alumni?${queryParams.toString()}`, {
@@ -93,12 +94,13 @@ export default function ProtectedPage() {
     try {
       // Update the filters state
       setFilters((prev) => ({ ...prev, name: session?.user?.name }));
+
   
       // Use the updated state directly here to ensure accuracy
   
       // Fetch data with the correct filters
 
-      const alumniData = await getData(filters);
+      const alumniData = await getData(filters , userRole);
       setData(alumniData);
     } catch (error) {
       console.error('Error fetching alumni data:', error);
