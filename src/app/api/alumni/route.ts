@@ -120,6 +120,7 @@ export async function PUT(request: NextRequest) {
           {
             $set: {
               status: updated_status,
+              contacted_by: contactedby
             },
           }
         );
