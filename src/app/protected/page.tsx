@@ -206,6 +206,9 @@ export default function ProtectedPage() {
             <DropdownMenuItem onClick={() => router.push('/protected')}>
                 Alumni Database
             </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => router.push('/contacts')}>
+                Your Contacts
+            </DropdownMenuItem>
             <DropdownMenuItem>
               <DropdownMenu>
                 <DropdownMenuTrigger>
