@@ -1,5 +1,7 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
+The link provided in the about section of the repository is the deployed website link. The access to the databas has been restricted only to the members of society of alumni affairs, which can be updated by the users who have been assigned the role of admin.
+
 ## Getting Started
 
 First, run the development server:
